@@ -1,0 +1,42 @@
+---
+title: "FlowTaP Data Science Test"
+author: "Uzo J Iwuagwu"
+date: "May 24, 2017"
+output: html_document
+---
+
+## 1. Engineering a Data Set
+Create a list of numbers with the following properties: 
+1) Minimum 100 distinct values, 
+2) the Mean of all values is 1000 (+/- 0.5), 
+3) the standard Deviation is 10 (+/- 0.1)
+
+```{r  Engineering a Data Set}
+set.seed(1)
+value = rnorm(n = 500, mean = 1000, sd = 10)
+value
+round(mean(value), 1)
+round(sd(value), 1)
+```
+
+## 2. Simulation
+
+Imagine there is a country in which couples only want boys.
+Couples continue to have children until they have their first boy. If they get a boy, they stop getting children.What is the long-term ratio of boys to girls in the country?
+
+```{r Simulation}
+p<-0
+for (i in 1:10000){
+  a<-0
+  while(a != 1){   #Stops when having girls
+    a<-as.numeric(rbinom(1, 1, 0.5))   #Simulation of a new birth with probability 0.5
+    p=p+1   #Number of births
+  }
+}
+(p-10000)/10000   #Ratio
+```
+
+
+
+
+
