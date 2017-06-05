@@ -1,0 +1,130 @@
+---
+title: "Bonus1"
+author: "Uzo J Iwuagwu"
+date: "June 5, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r packages}
+
+library(ggplot2)
+library(plyr)
+library(vcd)
+library(ggthemes)
+library(caret)
+#install.packages(GoodmanKruskal)
+library(ResourceSelection)
+library(randomForest)
+library(e1071)
+library(nnet)
+```
+Use Random Forest model type to predict wether a person makes over 50K a year
+
+Clean and read the Adult data set
+
+```{r Analyzing Data Set}
+adult_data =read.table("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz/adult.data.txt", header = TRUE, sep = ",", col.names = c("Age", "workclass", "fnlwgt", "Education", "Educationnum", "Maritalstatus", "Occupation", "Relationship", "race", "Sex", "Capitalgain", "Capitalloss", "hoursperweek", "NativeCountry", "Class"), fill = FALSE, na.strings = "?", strip.white = TRUE)
+adult_data
+
+```
+
+
+
+Check for missing value:
+```{r Missing Values}
+   any(is.na(adult_data))
+```
+Remove Missing Values
+```{r Remove missing value}
+    adult_data <- na.omit(adult_data)
+      adult_data
+```
+Clean and Read Test data set
+```{r Analyzing Test Data Set}
+adult_train <- adult_data[1:15081,]
+adult_test <- adult_data[15082:30161,]
+
+```
+
+
+Remember we removed the Educationnum from the logistic model due to collinearity, therefore we will remove it here
+
+```{r Covariates}
+set.seed(1234)
+
+covariates = paste("Age", "workclass", "Education",
+                    "Maritalstatus", "Occupation", "Relationship",
+                    "race", "Sex", "Capitalgain", "Capitalloss","hoursperweek", "NativeCountry",
+                    sep = "+")
+
+form <- as.formula(paste("Class ~", covariates))
+
+start_time <- proc.time()
+ModRF <- randomForest(formula = form,
+                      data= adult_train)
+time.rf <- proc.time() - start_time
+time.rf
+```
+
+
+```{r Out of bag Error}
+ModRF
+```
+We see that the "out-of-bag" error, or OOB, is 18.33%:
+
+##Test the accuracy on the training and test datasets
+
+```{r testing Accuracy}
+mean(predict(ModRF, newdata = adult_train) == adult_train$Class)
+mean(predict(ModRF, newdata = adult_test) == adult_test$Class)
+```
+Above we tested the accuracy on the training and test datasets and we see that it is 83.07% and 81.67%, respectively. The "out of sample" error is in agreement with the OOB estimate.
+
+Next we display an error plot of the random forest model:
+```{r Errorplot}
+plot(ModRF)
+```
+
+
+```{R test}
+print(ModRF)
+```
+The black solid line is the overall OOB error, the red dashed line is the prediction error for the first class/category (since we have a classification problem) of the variable "Class" - " <=50K", and the green dotted line represents the prediction error for the second category of"Class" - " >50K". From the error plot, we see that the errors do not decrease after the number of trees reaches a certain threshold, which is 100 trees. Hence, we try to build a RF model with 100 trees to check if we can achieve the same accuracy with a computationally less expensive model:
+
+
+```{r using 100}
+set.seed(1234)
+
+start_time <- proc.time()
+ModRF.small <- randomForest(formula = form, 
+                            data = adult_train, 
+                            ntree = 100)
+time.rf.small <- proc.time() - start_time
+time.rf.small
+
+```
+On our machine the computational time became faster.
+```{r Print 100}
+print(ModRF.small)
+```
+
+```{r}
+mean(predict(ModRF.small, newdata = adult_train) == adult_train$Class)
+mean(predict(ModRF.small, newdata = adult_test) == adult_test$Class)
+
+```
+From the code above,  the OOB error estimate increased insignificantly from 18.33% to 18.38% and the accuracy is a little smaller - 83.11% on the training data, and 81.59% on the test dataset. Next we show the confusion matrix:
+
+```{r}
+confusionMatrix(data = predict(ModRF.small, newdata = adult_test),
+                reference = adult_test$Class)
+
+```
+
+```{r}
+stat.accuracy.rf <- confusionMatrix(data = predict(ModRF.small, 
+                                                   newdata = adult_test),
+                                    reference = adult_test$Class)
+```
