@@ -30,7 +30,7 @@ Couples continue to have children until they have their first boy. If they get a
 p<-0
 for (i in 1:10000){
   a<-0
-  while(a != 1){   #Stops when having girls
+  while(a != 1){   #Stops when having boys
     a<-as.numeric(rbinom(1, 1, 0.5))   #Simulation of a new birth with probability 0.5
     p=p+1   #Number of births
   }
@@ -75,7 +75,7 @@ Remove Missing Values
 
 Clean and Read Test data set
 ```{r Analyzing Test Data Set}
-adult_test =read.table("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz/adult.test.txt", header = TRUE, sep = ",", col.names = c("Age", "workclass", "fnlwgt", "Education", "Education-num", "Marital-status", "Occupation", "Relationship", "race", "Sex", "Capital-gain", "Capital-loss", "hoursperweek", "Native Country", "Class"), fill = FALSE, strip.white = TRUE)
+adult_test =read.table("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz/adult.test.txt", header = TRUE, sep = ",", col.names = c("Age", "workclass", "fnlwgt", "Education", "Education-num", "Marital-status", "Occupation", "Relationship", "race", "Sex", "Capital-gain", "Capital-loss", "hoursperweek", "Native Country", "Class"), fill = FALSE, na.strings = "?", strip.white = TRUE)
 adult_test
 ```
 
@@ -327,6 +327,20 @@ anova(glm.model2, test = "LRT")
 ```
 
 As we can see from the results above, all explanatory variables are significant and according to the likelihood ratio tests we should keep all of the considered predictors in the model.
+
+Now we will test the significance of each level of the categorical predictors in the fitted model.
+
+```{r significance of each level of categorical predictor}
+length(glm.model2$coefficients)
+
+summary(glm.model2)
+```
+We have total of 95 model parameter and from the summary above we can see which are the significant covariates and levels of categorical covariates for the log odds model based on the corresponding p-values.
+
+```{r }
+confint.default(glm.model2)
+```
+
 
 
 
