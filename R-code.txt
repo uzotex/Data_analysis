@@ -1,0 +1,219 @@
+1 + 1/2 - 1/3 > 1, 
+1/5 + 1/6 - 1/7 > 1/5,
+1/10 + 1/11 - 1/12 > 1/10
+
+
+## 1. Engineering a Data Set
+Create a list of numbers with the following properties: 
+1) Minimum 100 distinct values, 
+2) the Mean of all values is 1000 (+/- 0.5), 
+3) the standard Deviation is 10 (+/- 0.1)
+
+```{r  Engineering a Data Set}
+set.seed(1)
+value = rnorm(n = 105, mean = 1000, sd = 10)
+value
+round(mean(value), 3)
+round(sd(value), 3)
+```
+
+## 2. Simulation
+
+Imagine there is a country in which couples only want boys.
+Couples continue to have children until they have their first boy. If they get a boy, they stop getting 
+children.What is the long-term ratio of boys to girls in the country?
+
+p<-0
+for (i in 1:10000){
+  a<-0
+  while(a != 1){   #Stops when having a boys
+    a<-as.numeric(rbinom(1, 1, 0.5))   #Simulation of a new birth with probability 0.5
+    p=p+1   #Number of births
+  }
+}
+(p-10000)/10000   #Ratio
+
+
+adultdata_frame = data.frame(adult_data)
+adultdata_frame
+
+ggplot(adultdata_frame, aes(x=Class, y=hoursperweek)) + geom_point()
+
+save(adult_data, file = "adult_data.rda")
+load("adult_data.rda")
+
+aggregate(Age ~  hoursperweek, data = adult_data, summary)
+
+
+ggplot(adult_data, aes(x=Age)) + geom_histogram()
+
+----------------------------------------------------------------------------------------------------------------------
+
+## 3. Analyzing a Data Set
+
+Explore the data and visualize and explain two interesting findings of your choice. Ideally, use R and ggplot2 for this task
+
+```{r ggplot2_packages}
+install.packages("ggplot2")
+install.packages("vcd")
+install.packages("ggthemes")
+install.packages("ResourceSelection")
+library(vcd)
+library("ggplot2")
+library(plyr)
+
+getwd()
+setwd("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz")
+```
+
+Clean and read the Adult data set
+
+```{r Analyzing Data Set}
+adult_data =read.table("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz/adult.data.txt", header = TRUE, sep = ",", col.names = c("Age", "workclass", "fnlwgt", "Education", "Education-num", "Marital-status", "Occupation", "Relationship", "race", "Sex", "Capital-gain", "Capital-loss", "hoursperweek", "Native Country", "Class"), fill = FALSE, na.strings = "?", strip.white = TRUE)
+adult_data
+
+```
+
+Check for missing value:
+```{r Missing Values}
+   any(is.na(adult_data))
+```
+Remove Missing Values
+```{r Remove missing value}
+    adult_data <- na.omit(adult_data)
+```
+
+Clean and Read Test data set
+```{r Analyzing Test Data Set}
+adult_test =read.table("C:/Users/PCL/Documents/FlowTap/FlowTap_Quizz/adult.test.txt", header = TRUE, sep = ",", col.names = c("Age", "workclass", "fnlwgt", "Education", "Education-num", "Marital-status", "Occupation", "Relationship", "race", "Sex", "Capital-gain", "Capital-loss", "hoursperweek", "Native Country", "Class"), fill = FALSE, strip.white = TRUE)
+adult_test
+```
+
+# visualization
+
+The distribution of the  class <=50k and >50k
+
+Summary Statistics
+```{r Summary Statistics}
+summary(adult_data$Class)
+```
+
+```{r barplot}
+
+ggplot(data = adult_data, 
+       mapping = aes(x = adult_data$Class, fill = adult_data$Class)) + 
+  geom_bar(mapping = aes(y = (..count..)/sum(..count..))) +
+  geom_text(mapping = aes(label = scales::percent((..count..)/sum(..count..)),
+                      y = (..count..)/sum(..count..) ), 
+            stat = "count",vjust = -.1) + labs(x = "Class",   y = "", fill = "Class")
+
+```
+
+Findings: We can see that 75.9% are below or equal the class 50k income earners while 24.1% are above the class 50k of income earners.
+
+# Visulaization 2
+
+```{r Age Summary}
+ summary(adult_data$Age)
+ IQR(adult_data$Age)
+```
+Finding: The median age is 37 years and the mean age is 38 years. The quartile tells us that that most working are between 28 and 47 years old. There are some outliers, such as individuals being between 75 and 90 years old. To visualize the summary statistic we also show a box plot of the variable “Age”:
+
+```{r Age Boxplot}
+ ggplot(mapping = aes(x = factor(0), y = Age), data = adult_data) + geom_boxplot() +
+  stat_summary(fun.y = mean, geom = 'point', shape = 19, color = "red",cex = 2) +
+  coord_cartesian(ylim = c(10, 100)) +
+  scale_y_continuous(breaks = seq(10, 100, 5)) +
+  ylab("Age") +
+  xlab("") +  
+  ggtitle("Box Plot of Age") +
+  scale_x_discrete(breaks = NULL)
+```
+
+Finding from the Histogram below shows that 20 to 50 are the working age group.
+
+```{r Age Histogram}
+qplot(x = adult_data$Age, data = adult_data, binwidth = 5, color = I('black'), fill = I('#F29025'),xlab = "Age", ylab = "Count", main = "Histogram of Age") + scale_x_continuous(breaks = seq(0, 95, 5)) +  scale_y_continuous(breaks = seq(0, 4500, 500))
+```
+
+## linear model to predict wether a person makes over 50K a year
+
+```{r Check and Install all packages}
+if (!require(caTools)){
+    install.packages('caTools', repos='http://cran.us.r-project.org')
+    }
+
+if (!require(ROCR)){
+    install.packages('ROCR', repos='http://cran.us.r-project.org')
+    }
+
+
+if (!require(rpart)){
+    install.packages('rpart', repos='http://cran.us.r-project.org')
+    }
+
+
+if (!require(randomForest)){
+    install.packages('randomForest', repos='http://cran.us.r-project.org')
+    }
+
+if (!require(caret)){
+    install.packages('caret', repos='http://cran.us.r-project.org')
+    }
+
+
+if (!require(e1071)){
+    install.packages('e1071', repos='http://cran.us.r-project.org')
+    }
+
+
+if (!require(rpart.plot)){
+    install.packages('rpart.plot', repos='http://cran.us.r-project.org')
+    }
+
+
+if (!require(ggplot2)){
+    install.packages('ggplot2', repos='http://cran.us.r-project.org')
+    }
+
+```
+
+```{r}
+library(ggplot2)
+library(plyr)
+library(vcd)
+library(ggthemes)
+library(caret)
+library(ResourceSelection)
+library(randomForest)
+library(e1071)
+library(nnet)
+```
+
+We will use logistic regression model which is a type of linear model since the independent variable is categorical to predict whether an individual's earnings are above $50,000.
+
+Using Y as the class in binary formatof 1 and 0.
+if class >50k then Y = 1 else Y = 0
+
+Fitting a logistic regression model with the function glm
+Test for 
+
+```{r Logistic Regression}
+names(adult_data)
+covariates <- paste("Age", "workclass", "Education", "Occupation", "Relationship",
+"race", "Sex", "hoursperweek", sep = "+")
+
+form <- as.formula(paste("Class~", covariates))
+
+start_time <- proc.time()
+glm.model <- glm(formula = form,
+                 data = adult_data, 
+                 family = binomial(link = "logit"),
+                 x = TRUE)
+# The option "x=TRUE" returns the design matrix
+time.logistic <- proc.time() - start_time
+time.logistic
+```
+
+
+
